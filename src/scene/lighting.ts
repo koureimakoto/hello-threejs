@@ -6,7 +6,7 @@ export function createLighting(scene: THREE.Scene): void {
   scene.add(ambientLight)
 
   // Directional light
-  const directionalLight = new THREE.DirectionalLight(0xfffc9c, 0.5)
+  const directionalLight = new THREE.DirectionalLight(0xfffc9c, 1)
   directionalLight.position.set(100, 100, 100)
   directionalLight.castShadow = true
   directionalLight.shadow.mapSize.set(2048, 2048)
