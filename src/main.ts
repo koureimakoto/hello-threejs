@@ -25,7 +25,7 @@ class App {
     )
 
     // Create the scene
-    createScene(this.sceneManager.scene)
+    createScene(this.sceneManager)
 
     // Setup resize handling
     this.handleResize()
