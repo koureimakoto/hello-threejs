@@ -1,12 +1,12 @@
 import * as THREE from 'three'
 
 export function createLighting(scene: THREE.Scene): void {
-  // Ambient light
-  const ambientLight = new THREE.AmbientLight(0x2d3645, 1.5)
+  // Ambient light - aumentei de 1.5 para 2.5
+  const ambientLight = new THREE.AmbientLight(0x2d3645, 2.5)
   scene.add(ambientLight)
 
-  // Directional light
-  const directionalLight = new THREE.DirectionalLight(0xfffc9c, 1)
+  // Directional light - aumentei de 1 para 1.8
+  const directionalLight = new THREE.DirectionalLight(0xfffc9c, 1.8)
   directionalLight.position.set(100, 100, 100)
   directionalLight.castShadow = true
   directionalLight.shadow.mapSize.set(2048, 2048)
@@ -18,8 +18,8 @@ export function createLighting(scene: THREE.Scene): void {
   directionalLight.shadow.camera.bottom = -50
   scene.add(directionalLight)
 
-  // Spot light
-  const spotLight = new THREE.SpotLight(0xff8800, 1, 10, Math.PI / 16, 0.02, 2)
+  // Spot light - aumentei de 1 para 1.5
+  const spotLight = new THREE.SpotLight(0xff8800, 1.5, 10, Math.PI / 16, 0.02, 2)
   spotLight.position.set(2, 2, 0)
   spotLight.target.position.set(0, 0, 0)
   spotLight.castShadow = true
