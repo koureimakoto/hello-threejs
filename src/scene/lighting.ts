@@ -19,7 +19,7 @@ export function createLighting(scene: THREE.Scene): void {
   scene.add(directionalLight)
 
   // Spot light - aumentei de 1 para 1.5
-  const spotLight = new THREE.SpotLight(0xff8800, 1.5, 10, Math.PI / 16, 0.02, 2)
+  const spotLight = new THREE.SpotLight(0xff8800, 5.5, 10, Math.PI / 16, 0.02, 2)
   spotLight.position.set(2, 2, 0)
   spotLight.target.position.set(0, 0, 0)
   spotLight.castShadow = true
