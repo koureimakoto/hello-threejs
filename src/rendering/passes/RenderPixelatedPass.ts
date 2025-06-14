@@ -4,7 +4,7 @@ import { Pass, FullScreenQuad } from "three/examples/jsm/postprocessing/Pass"
 
 export class RenderPixelatedPass extends Pass {
   private fsQuad: FullScreenQuad
-  public resolution: THREE.Vector2 // Tornando a resolução pública para permitir atualização externa
+  public resolution: THREE.Vector2
   public scene: THREE.Scene | null
   private camera: THREE.Camera
   private rgbRenderTarget: WebGLRenderTarget
@@ -23,13 +23,8 @@ export class RenderPixelatedPass extends Pass {
     this.normalMaterial = new THREE.MeshNormalMaterial()
   }
 
-  /**
-   * Define a nova resolução para o passe de pixelização e atualiza os uniforms do shader.
-   * @param resolution A nova resolução em pixels (largura, altura).
-   */
   public setResolution(resolution: THREE.Vector2): void {
     this.resolution = resolution;
-    // Atualiza o uniform 'resolution' no shader material para refletir a nova resolução
     if (this.fsQuad.material instanceof THREE.ShaderMaterial) {
       this.fsQuad.material.uniforms.resolution.value.set(
         this.resolution.x,
@@ -40,11 +35,22 @@ export class RenderPixelatedPass extends Pass {
     }
   }
 
+  public setOutlineThickness(thickness: number): void {
+    if (this.fsQuad.material instanceof THREE.ShaderMaterial) {
+      this.fsQuad.material.uniforms.outlineThickness.value = thickness;
+    }
+  }
+
+  public setOutlineColor(color: THREE.Color): void {
+    if (this.fsQuad.material instanceof THREE.ShaderMaterial) {
+      this.fsQuad.material.uniforms.outlineColor.value = color;
+    }
+  }
+
   render(renderer: WebGLRenderer, writeBuffer: WebGLRenderTarget): void {
     if (!this.scene) return
 
-    // Configurar transparência nos render targets
-    renderer.setClearColor(0x000000, 0) // Alpha 0 para transparência
+    renderer.setClearColor(0x000000, 0)
     renderer.setRenderTarget(this.rgbRenderTarget)
     renderer.clear()
     renderer.render(this.scene, this.camera)
@@ -76,7 +82,9 @@ export class RenderPixelatedPass extends Pass {
         tDiffuse: { value: null },
         tDepth: { value: null },
         tNormal: { value: null },
-        angleThresholdInRadians: { value: THREE.MathUtils.degToRad(34) }, // Valor inicial de 10 graus convertido para radianos
+        angleThresholdInRadians: { value: THREE.MathUtils.degToRad(34) },
+        outlineThickness: { value: 1.0 },
+        outlineColor: { value: new THREE.Color(0x0d1123) },
         resolution: {
           value: new THREE.Vector4(
             this.resolution.x,
@@ -86,7 +94,7 @@ export class RenderPixelatedPass extends Pass {
           )
         }
       },
-      transparent: true, // Habilitar transparência
+      transparent: true,
       vertexShader: `
         varying vec2 vUv;
         void main() {
@@ -99,6 +107,9 @@ export class RenderPixelatedPass extends Pass {
         uniform sampler2D tDepth;
         uniform sampler2D tNormal;
         uniform vec4 resolution;
+        uniform float outlineThickness;
+        uniform vec3 outlineColor;
+        uniform float angleThresholdInRadians;
         varying vec2 vUv;
 
         float getDepth(int x, int y) {
@@ -111,41 +122,81 @@ export class RenderPixelatedPass extends Pass {
 
         float getAngleBetweenNormals(vec3 normal1, vec3 normal2) {
           float dotProduct = dot(normal1, normal2);
-          dotProduct = clamp(dotProduct, -1.0, 1.0); // Clamp para segurança
-          return acos(dotProduct); // Retorna o ângulo em radianos
+          dotProduct = clamp(dotProduct, -1.0, 1.0);
+          return acos(dotProduct);
         }
 
         float neighborHardEdgeIndicator(int x, int y, vec3 normal, float angleThreshold) {
- vec3 neighborNormal = getNormal(x, y);
- float angle = getAngleBetweenNormals(normal, neighborNormal);
- return step(angleThreshold, angle); // Retorna 1.0 se o ângulo for maior que o limite (aresta dura)
+          vec3 neighborNormal = getNormal(x, y);
+          float angle = getAngleBetweenNormals(normal, neighborNormal);
+          return step(angleThreshold, angle);
         }
 
-        uniform float angleThresholdInRadians;
+        // CORREÇÃO: Função para detectar outline EXTERNA
+        float isOutlinePixel() {
+          vec4 currentPixel = texture2D(tDiffuse, vUv);
+          
+          // CHAVE: Se o pixel atual é TRANSPARENTE, verifica se deve virar outline
+          if (currentPixel.a < 0.01) {
+            float radius = outlineThickness;
+            
+            // Verifica se há pixels OPACOS na vizinhança
+            for (float x = -radius; x <= radius; x += 1.0) {
+              for (float y = -radius; y <= radius; y += 1.0) {
+                if (x == 0.0 && y == 0.0) continue;
+                
+                float distance = length(vec2(x, y));
+                if (distance <= radius) {
+                  vec2 offset = vec2(x, y);
+                  vec4 neighborPixel = texture2D(tDiffuse, vUv + offset * resolution.zw);
+                  
+                  // Se encontrar um pixel opaco próximo, este pixel transparente vira outline
+                  if (neighborPixel.a > 0.01) {
+                    return 1.0;
+                  }
+                }
+              }
+            }
+          }
+          
+          return 0.0;
+        }
 
         float normalEdgeIndicator() {
-          float depth = getDepth(0, 0); // A profundidade ainda é usada no neighborHardEdgeIndicator original, mas aqui a removemos
           vec3 normal = getNormal(0, 0);
           float indicator = 0.0;
- indicator += neighborHardEdgeIndicator(0, -1, normal, angleThresholdInRadians);
- indicator += neighborHardEdgeIndicator(0, 1, normal, angleThresholdInRadians);
- indicator += neighborHardEdgeIndicator(-1, 0, normal, angleThresholdInRadians);
- indicator += neighborHardEdgeIndicator(1, 0, normal, angleThresholdInRadians);
- // Use smoothstep para uma transição suave do indicador de borda de normal
-          // Ajuste os limites (0.0, 0.5) conforme necessário para a suavidade
+          
+          indicator += neighborHardEdgeIndicator(0, -1, normal, angleThresholdInRadians);
+          indicator += neighborHardEdgeIndicator(0, 1, normal, angleThresholdInRadians);
+          indicator += neighborHardEdgeIndicator(-1, 0, normal, angleThresholdInRadians);
+          indicator += neighborHardEdgeIndicator(1, 0, normal, angleThresholdInRadians);
+          
+          // Diagonais para outline mais espessa
+          indicator += neighborHardEdgeIndicator(-1, -1, normal, angleThresholdInRadians) * 0.7;
+          indicator += neighborHardEdgeIndicator(1, -1, normal, angleThresholdInRadians) * 0.7;
+          indicator += neighborHardEdgeIndicator(-1, 1, normal, angleThresholdInRadians) * 0.7;
+          indicator += neighborHardEdgeIndicator(1, 1, normal, angleThresholdInRadians) * 0.7;
+          
           return smoothstep(0.4, 0.9, indicator);
         }
 
         float depthEdgeIndicator() {
           float depth = getDepth(0, 0);
           float diff = 0.0;
+          
           diff += clamp(getDepth(1, 0) - depth, 0.0, 1.0);
           diff += clamp(getDepth(-1, 0) - depth, 0.0, 1.0);
           diff += clamp(getDepth(0, 1) - depth, 0.0, 1.0);
           diff += clamp(getDepth(0, -1) - depth, 0.0, 1.0);
+          
+          // Diagonais para outline mais espessa
+          diff += clamp(getDepth(1, 1) - depth, 0.0, 1.0) * 0.7;
+          diff += clamp(getDepth(-1, 1) - depth, 0.0, 1.0) * 0.7;
+          diff += clamp(getDepth(1, -1) - depth, 0.0, 1.0) * 0.7;
+          diff += clamp(getDepth(-1, -1) - depth, 0.0, 1.0) * 0.7;
+          
           return floor(smoothstep(0.01, 0.02, diff) * 2.) / 2.;
         }
-
 
         float lum(vec4 color) {
           vec4 weights = vec4(.2126, .7152, .0722, .0);
@@ -154,15 +205,23 @@ export class RenderPixelatedPass extends Pass {
 
         void main() {
           vec4 texel = texture2D(tDiffuse, vUv);
+          float outlineStrength = isOutlinePixel();
           
-          // Preservar transparência - se o alpha for 0, manter transparente
+          // Se é um pixel de outline (transparente que deve virar outline)
+          if (outlineStrength > 0.0) {
+            gl_FragColor = vec4(outlineColor, 1.0);
+            return;
+          }
+          
+          // Se o pixel é transparente e não é outline, mantém transparente
           if (texel.a < 0.01) {
             gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
             return;
           }
           
+          // Aplicar highlight nas bordas dos pixels opacos
           float normalEdgeCoefficient = .3;
-          float depthEdgeCoefficient = .4;
+          float depthEdgeCoefficient = .9;
           float dei = depthEdgeIndicator();
           float nei = normalEdgeIndicator();
           float coefficient = dei > 0.0 ? (1.0 - depthEdgeCoefficient * dei) : (1.0 + normalEdgeCoefficient * nei);
