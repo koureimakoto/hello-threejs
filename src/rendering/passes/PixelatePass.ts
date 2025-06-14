@@ -38,6 +38,7 @@ export class PixelatePass extends Pass {
           )
         }
       },
+      transparent: true, // Habilitar transparência
       vertexShader: `
         varying vec2 vUv;
         void main() {
@@ -52,7 +53,7 @@ export class PixelatePass extends Pass {
         void main() {
           vec2 iuv = (floor(resolution.xy * vUv) + .5) * resolution.zw;
           vec4 texel = texture2D(tDiffuse, iuv);
-          gl_FragColor = texel;
+          gl_FragColor = texel; // Preserva o alpha original
         }
       `
     })

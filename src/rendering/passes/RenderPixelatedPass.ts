@@ -43,11 +43,15 @@ export class RenderPixelatedPass extends Pass {
   render(renderer: WebGLRenderer, writeBuffer: WebGLRenderTarget): void {
     if (!this.scene) return
 
+    // Configurar transparência nos render targets
+    renderer.setClearColor(0x000000, 0) // Alpha 0 para transparência
     renderer.setRenderTarget(this.rgbRenderTarget)
+    renderer.clear()
     renderer.render(this.scene, this.camera)
 
     const overrideMaterial_old = this.scene.overrideMaterial
     renderer.setRenderTarget(this.normalRenderTarget)
+    renderer.clear()
     this.scene.overrideMaterial = this.normalMaterial
     renderer.render(this.scene, this.camera)
     this.scene.overrideMaterial = overrideMaterial_old
@@ -82,6 +86,7 @@ export class RenderPixelatedPass extends Pass {
           )
         }
       },
+      transparent: true, // Habilitar transparência
       vertexShader: `
         varying vec2 vUv;
         void main() {
@@ -149,12 +154,20 @@ export class RenderPixelatedPass extends Pass {
 
         void main() {
           vec4 texel = texture2D(tDiffuse, vUv);
+          
+          // Preservar transparência - se o alpha for 0, manter transparente
+          if (texel.a < 0.01) {
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+            return;
+          }
+          
           float normalEdgeCoefficient = .3;
           float depthEdgeCoefficient = .4;
           float dei = depthEdgeIndicator();
           float nei = normalEdgeIndicator();
           float coefficient = dei > 0.0 ? (1.0 - depthEdgeCoefficient * dei) : (1.0 + normalEdgeCoefficient * nei);
-          gl_FragColor = texel * coefficient;
+          
+          gl_FragColor = vec4(texel.rgb * coefficient, texel.a);
         }
       `
     })

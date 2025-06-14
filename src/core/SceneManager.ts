@@ -6,7 +6,8 @@ export class SceneManager {
 
   constructor() {
     this.scene = new THREE.Scene()
-    this.scene.background = new THREE.Color(0x151729)
+    // Remove o background para permitir transparência
+    // this.scene.background = new THREE.Color(0x151729)
   }
 
   public addAnimatedObject(mesh: THREE.Object3D, updateFn: (time: number) => void): void {

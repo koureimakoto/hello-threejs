@@ -36,9 +36,10 @@ export class PixelRenderer {
     this.renderer = new THREE.WebGLRenderer({ 
       antialias: false,
       alpha: true,
+      premultipliedAlpha: false,
       powerPreference: 'high-performance'
     })
-    this.renderer.setClearColor( 0xff0000, 0 )
+    // Remove o setClearColor para permitir transparência
     this.renderer.shadowMap.enabled = true
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
     this.renderer.setSize(this.screenResolution.x, this.screenResolution.y)
@@ -71,8 +72,7 @@ export class PixelRenderer {
     const pixelatedPass = this.composer.passes[0] as RenderPixelatedPass
     pixelatedPass.scene = scene
     
-    this.renderer.setClearColor(0x000000, 0); // Cor preta com alfa 0
-    this.renderer.clear(); // Limpa a tela/render target do composer
+    // Remove o setClearColor e clear para manter transparência
     this.composer.render()
   }
 
