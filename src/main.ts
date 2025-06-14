@@ -4,9 +4,9 @@ import { CameraController } from './core/CameraController'
 import { createScene } from './scene/createScene'
 
 class App {
-  private sceneManager: SceneManager
-  private pixelRenderer: PixelRenderer
-  private cameraController: CameraController
+  private sceneManager!: SceneManager
+  private pixelRenderer!: PixelRenderer
+  private cameraController!: CameraController
   private animationId: number = 0
 
   constructor() {

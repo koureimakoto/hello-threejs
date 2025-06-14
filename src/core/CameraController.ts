@@ -8,7 +8,7 @@ export class CameraController {
     private camera: THREE.Camera,
     private domElement: HTMLElement
   ) {
-    this.controls = new OrbitControls(camera, domElement)
+    this.controls = new OrbitControls(camera, this.domElement)
     this.setupControls()
   }
 

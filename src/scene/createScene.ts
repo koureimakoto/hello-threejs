@@ -1,4 +1,3 @@
-import * as THREE from 'three'
 import { createLighting } from './lighting'
 import { createGeometry } from './geometry'
 import { SceneManager } from '../core/SceneManager'

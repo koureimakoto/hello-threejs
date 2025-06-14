@@ -1,5 +1,5 @@
 import * as THREE from "three"
-import { Vector2, WebGLRenderer, WebGLRenderTarget } from "three"
+import { WebGLRenderer, WebGLRenderTarget } from "three"
 import { Pass, FullScreenQuad } from "three/examples/jsm/postprocessing/Pass"
 
 export class RenderPixelatedPass extends Pass {
@@ -19,7 +19,7 @@ export class RenderPixelatedPass extends Pass {
     this.camera = camera
 
     this.rgbRenderTarget = this.createPixelRenderTarget(resolution, THREE.RGBAFormat, true)
-    this.normalRenderTarget = this.createPixelRenderTarget(resolution, THREE.RGBFormat, false)
+    this.normalRenderTarget = this.createPixelRenderTarget(resolution, THREE.RGBFormat, true)
     this.normalMaterial = new THREE.MeshNormalMaterial()
   }
 
@@ -144,7 +144,7 @@ export class RenderPixelatedPass extends Pass {
           float depthEdgeCoefficient = .4;
           float dei = depthEdgeIndicator();
           float nei = normalEdgeIndicator();
-          float coefficient = dei > 0.0 ? (1.0 - depthEdgeCoefficient * dei) : (1.0 + normalEdgeCoefficient * nei);
+          float coefficient = dei > 0.0 ? (1.0 - depthEdgeCoefficient * dei) : (1.5 + normalEdgeCoefficient * nei);
           gl_FragColor = texel * coefficient;
         }
       `

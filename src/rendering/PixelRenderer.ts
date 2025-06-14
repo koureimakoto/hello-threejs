@@ -13,7 +13,7 @@ export class PixelRenderer {
   // no construtor. O modificador de asserção de atribuição definitiva (!) é usado
   // para dizer ao TypeScript que esta propriedade será definitivamente atribuída.
   public camera!: THREE.OrthographicCamera
-  private composer: EffectComposer
+  private composer!: EffectComposer
   private screenResolution: THREE.Vector2
   private renderResolution: THREE.Vector2
 
