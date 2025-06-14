@@ -4,7 +4,7 @@ import { Pass, FullScreenQuad } from "three/examples/jsm/postprocessing/Pass"
 
 export class RenderPixelatedPass extends Pass {
   private fsQuad: FullScreenQuad
-  private resolution: THREE.Vector2
+  public resolution: THREE.Vector2 // Tornando a resolução pública para permitir atualização externa
   public scene: THREE.Scene | null
   private camera: THREE.Camera
   private rgbRenderTarget: WebGLRenderTarget
@@ -21,6 +21,23 @@ export class RenderPixelatedPass extends Pass {
     this.rgbRenderTarget = this.createPixelRenderTarget(resolution, THREE.RGBAFormat, true)
     this.normalRenderTarget = this.createPixelRenderTarget(resolution, THREE.RGBFormat, false)
     this.normalMaterial = new THREE.MeshNormalMaterial()
+  }
+
+  /**
+   * Define a nova resolução para o passe de pixelização e atualiza os uniforms do shader.
+   * @param resolution A nova resolução em pixels (largura, altura).
+   */
+  public setResolution(resolution: THREE.Vector2): void {
+    this.resolution = resolution;
+    // Atualiza o uniform 'resolution' no shader material para refletir a nova resolução
+    if (this.fsQuad.material instanceof THREE.ShaderMaterial) {
+      this.fsQuad.material.uniforms.resolution.value.set(
+        this.resolution.x,
+        this.resolution.y,
+        1 / this.resolution.x,
+        1 / this.resolution.y
+      );
+    }
   }
 
   render(renderer: WebGLRenderer, writeBuffer: WebGLRenderTarget): void {
