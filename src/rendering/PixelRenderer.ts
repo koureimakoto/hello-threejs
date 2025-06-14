@@ -39,7 +39,8 @@ export class PixelRenderer {
       premultipliedAlpha: false,
       powerPreference: 'high-performance'
     })
-    // Remove o setClearColor para permitir transparência
+    // Configurar transparência no renderer
+    this.renderer.setClearColor(0x000000, 0) // Alpha 0 para transparência
     this.renderer.shadowMap.enabled = true
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
     this.renderer.setSize(this.screenResolution.x, this.screenResolution.y)
@@ -54,17 +55,33 @@ export class PixelRenderer {
   }
 
   private setupComposer(): void {
-    this.composer = new EffectComposer(this.renderer)
+    // Criar render target com transparência
+    const renderTarget = new THREE.WebGLRenderTarget(
+      this.screenResolution.x, 
+      this.screenResolution.y,
+      {
+        format: THREE.RGBAFormat,
+        type: THREE.UnsignedByteType,
+        minFilter: THREE.LinearFilter,
+        magFilter: THREE.LinearFilter,
+        generateMipmaps: false,
+        stencilBuffer: false
+      }
+    )
+
+    this.composer = new EffectComposer(this.renderer, renderTarget)
     
     // Pixelated render pass
     this.composer.addPass(new RenderPixelatedPass(this.renderResolution, null, this.camera))
     
-    // Bloom effect
-    const bloomPass = new UnrealBloomPass(this.screenResolution, 0.4, 0.1, 0.9)
-    this.composer.addPass(bloomPass)
+    // Bloom effect - comentado temporariamente para testar transparência
+    // const bloomPass = new UnrealBloomPass(this.screenResolution, 0.4, 0.1, 0.9)
+    // this.composer.addPass(bloomPass)
     
     // Final pixelation
-    this.composer.addPass(new PixelatePass(this.renderResolution))
+    const pixelatePass = new PixelatePass(this.renderResolution)
+    pixelatePass.renderToScreen = true
+    this.composer.addPass(pixelatePass)
   }
 
   public render(scene: THREE.Scene): void {
@@ -72,7 +89,8 @@ export class PixelRenderer {
     const pixelatedPass = this.composer.passes[0] as RenderPixelatedPass
     pixelatedPass.scene = scene
     
-    // Remove o setClearColor e clear para manter transparência
+    // Limpar com transparência
+    this.renderer.setClearColor(0x000000, 0)
     this.composer.render()
   }
 
