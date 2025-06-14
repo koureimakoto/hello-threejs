@@ -23,7 +23,7 @@ export class PixelRenderer {
     // `divideScalar(6)` significa que a resolução de renderização será 1/6 da resolução da tela.
     // Um fator menor (ex: 3) resultará em pixels maiores (menor densidade).
     // Um fator maior (ex: 12) resultará em pixels menores (maior densidade).
-    this.renderResolution = this.screenResolution.clone().divideScalar(4)
+    this.renderResolution = this.screenResolution.clone().divideScalar(5)
     this.renderResolution.x = Math.floor(this.renderResolution.x)
     this.renderResolution.y = Math.floor(this.renderResolution.y)
 
@@ -35,8 +35,10 @@ export class PixelRenderer {
   private setupRenderer(container: HTMLElement): void {
     this.renderer = new THREE.WebGLRenderer({ 
       antialias: false,
+      alpha: true,
       powerPreference: 'high-performance'
     })
+    this.renderer.setClearColor( 0xff0000, 0 )
     this.renderer.shadowMap.enabled = true
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
     this.renderer.setSize(this.screenResolution.x, this.screenResolution.y)
@@ -69,6 +71,8 @@ export class PixelRenderer {
     const pixelatedPass = this.composer.passes[0] as RenderPixelatedPass
     pixelatedPass.scene = scene
     
+    this.renderer.setClearColor(0x000000, 0); // Cor preta com alfa 0
+    this.renderer.clear(); // Limpa a tela/render target do composer
     this.composer.render()
   }
 
