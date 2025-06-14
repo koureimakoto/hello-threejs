@@ -72,6 +72,7 @@ export class RenderPixelatedPass extends Pass {
         tDiffuse: { value: null },
         tDepth: { value: null },
         tNormal: { value: null },
+        angleThresholdInRadians: { value: THREE.MathUtils.degToRad(34) }, // Valor inicial de 10 graus convertido para radianos
         resolution: {
           value: new THREE.Vector4(
             this.resolution.x,
@@ -103,13 +104,31 @@ export class RenderPixelatedPass extends Pass {
           return texture2D(tNormal, vUv + vec2(x, y) * resolution.zw).rgb * 2.0 - 1.0;
         }
 
-        float neighborNormalEdgeIndicator(int x, int y, float depth, vec3 normal) {
-          float depthDiff = getDepth(x, y) - depth;
-          vec3 normalEdgeBias = vec3(1., 1., 1.);
-          float normalDiff = dot(normal - getNormal(x, y), normalEdgeBias);
-          float normalIndicator = clamp(smoothstep(-.01, .01, normalDiff), 0.0, 1.0);
-          float depthIndicator = clamp(sign(depthDiff * .25 + .0025), 0.0, 1.0);
-          return distance(normal, getNormal(x, y)) * depthIndicator * normalIndicator;
+        float getAngleBetweenNormals(vec3 normal1, vec3 normal2) {
+          float dotProduct = dot(normal1, normal2);
+          dotProduct = clamp(dotProduct, -1.0, 1.0); // Clamp para segurança
+          return acos(dotProduct); // Retorna o ângulo em radianos
+        }
+
+        float neighborHardEdgeIndicator(int x, int y, vec3 normal, float angleThreshold) {
+ vec3 neighborNormal = getNormal(x, y);
+ float angle = getAngleBetweenNormals(normal, neighborNormal);
+ return step(angleThreshold, angle); // Retorna 1.0 se o ângulo for maior que o limite (aresta dura)
+        }
+
+        uniform float angleThresholdInRadians;
+
+        float normalEdgeIndicator() {
+          float depth = getDepth(0, 0); // A profundidade ainda é usada no neighborHardEdgeIndicator original, mas aqui a removemos
+          vec3 normal = getNormal(0, 0);
+          float indicator = 0.0;
+ indicator += neighborHardEdgeIndicator(0, -1, normal, angleThresholdInRadians);
+ indicator += neighborHardEdgeIndicator(0, 1, normal, angleThresholdInRadians);
+ indicator += neighborHardEdgeIndicator(-1, 0, normal, angleThresholdInRadians);
+ indicator += neighborHardEdgeIndicator(1, 0, normal, angleThresholdInRadians);
+ // Use smoothstep para uma transição suave do indicador de borda de normal
+          // Ajuste os limites (0.0, 0.5) conforme necessário para a suavidade
+          return smoothstep(0.4, 0.9, indicator);
         }
 
         float depthEdgeIndicator() {
@@ -122,16 +141,6 @@ export class RenderPixelatedPass extends Pass {
           return floor(smoothstep(0.01, 0.02, diff) * 2.) / 2.;
         }
 
-        float normalEdgeIndicator() {
-          float depth = getDepth(0, 0);
-          vec3 normal = getNormal(0, 0);
-          float indicator = 0.0;
-          indicator += neighborNormalEdgeIndicator(0, -1, depth, normal);
-          indicator += neighborNormalEdgeIndicator(0, 1, depth, normal);
-          indicator += neighborNormalEdgeIndicator(-1, 0, depth, normal);
-          indicator += neighborNormalEdgeIndicator(1, 0, depth, normal);
-          return step(0.1, indicator);
-        }
 
         float lum(vec4 color) {
           vec4 weights = vec4(.2126, .7152, .0722, .0);
@@ -144,7 +153,7 @@ export class RenderPixelatedPass extends Pass {
           float depthEdgeCoefficient = .4;
           float dei = depthEdgeIndicator();
           float nei = normalEdgeIndicator();
-          float coefficient = dei > 0.0 ? (1.0 - depthEdgeCoefficient * dei) : (1.5 + normalEdgeCoefficient * nei);
+          float coefficient = dei > 0.0 ? (1.0 - depthEdgeCoefficient * dei) : (1.0 + normalEdgeCoefficient * nei);
           gl_FragColor = texel * coefficient;
         }
       `

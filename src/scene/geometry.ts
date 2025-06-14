@@ -7,7 +7,7 @@ export function createGeometry(sceneManager: SceneManager): void {
 
   console.log("TESTE:", sceneManager.scene.getObjectByName("Sculping14")?.isObject3D)
   // Load the initial GLB model
-  loadGLBModel(gltfLoader, sceneManager, '/src/assets/sculping14.glb')
+  loadGLBModel(gltfLoader, sceneManager, '/src/assets/sculping20.glb')
 
 }
 export function loadGLBModel(loader: GLTFLoader, sceneManager: SceneManager, modelPath: string): void {
