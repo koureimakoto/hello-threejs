@@ -74,9 +74,9 @@ export class PixelRenderer {
     // Pixelated render pass
     this.composer.addPass(new RenderPixelatedPass(this.renderResolution, null, this.camera))
     
-    // Bloom effect - comentado temporariamente para testar transparência
-    // const bloomPass = new UnrealBloomPass(this.screenResolution, 0.4, 0.1, 0.9)
-    // this.composer.addPass(bloomPass)
+    // Bloom effect com configurações mais suaves para preservar transparência
+    const bloomPass = new UnrealBloomPass(this.screenResolution, 0.3, 0.1, 0.8)
+    this.composer.addPass(bloomPass)
     
     // Final pixelation
     const pixelatePass = new PixelatePass(this.renderResolution)
