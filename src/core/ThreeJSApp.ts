@@ -1,13 +1,14 @@
 import * as THREE from 'three';
 import { PixelRenderer } from '../rendering/PixelRenderer';
 import { CameraController } from './CameraController';
-import { createScene } from '../scene/createScene';
+import { createScene, getSculptingAnimationController } from '../scene/createScene';
 
 export class ThreeJSApp {
   private scene: THREE.Scene;
   private pixelRenderer: PixelRenderer;
   private cameraController: CameraController;
   private animationId: number | null = null;
+  private clock: THREE.Clock;
 
   constructor(container: HTMLElement) {
     this.scene = new THREE.Scene();
@@ -16,9 +17,14 @@ export class ThreeJSApp {
       this.pixelRenderer.camera, 
       this.pixelRenderer.renderer.domElement
     );
+    this.clock = new THREE.Clock();
 
-    createScene(this.scene);
+    this.initializeScene();
     this.setupEventListeners();
+  }
+
+  private async initializeScene(): Promise<void> {
+    await createScene(this.scene);
   }
 
   private setupEventListeners(): void {
@@ -37,6 +43,15 @@ export class ThreeJSApp {
 
   private animate = (): void => {
     this.animationId = requestAnimationFrame(this.animate);
+    
+    const deltaTime = this.clock.getDelta();
+    
+    // Atualizar animações
+    const animationController = getSculptingAnimationController();
+    if (animationController) {
+      animationController.update(deltaTime);
+    }
+    
     this.cameraController.update();
     this.pixelRenderer.render(this.scene);
   };
@@ -45,11 +60,21 @@ export class ThreeJSApp {
     this.pixelRenderer.setPixelDensityFactor(factor);
   }
 
+  // Método público para acessar o controller de animação
+  public getAnimationController() {
+    return getSculptingAnimationController();
+  }
+
   public dispose(): void {
     if (this.animationId) {
       cancelAnimationFrame(this.animationId);
     }
     this.pixelRenderer.dispose();
     this.cameraController.dispose();
+    
+    const animationController = getSculptingAnimationController();
+    if (animationController) {
+      animationController.dispose();
+    }
   }
 }
