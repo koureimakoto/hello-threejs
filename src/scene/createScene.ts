@@ -11,7 +11,7 @@ export async function createScene(scene: Scene): Promise<void> {
 
   // Load model with animations
   try {
-    sculptingModel = await loadGLBModel(scene, '/src/assets/sculping20.glb');
+    sculptingModel = await loadGLBModel(scene, '/src/assets/sculping.glb');
     console.log('Modelo carregado com sucesso!');
     
     if (sculptingModel.animationController) {

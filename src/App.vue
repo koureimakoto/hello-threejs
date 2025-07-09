@@ -1,6 +1,12 @@
 <template>
-  <div id="app" ref="appContainer">
-    <!-- Controles de animação -->
+  <div id="app">
+    <!-- 1. Este é o novo marcador de posição para o canvas -->
+    <div ref="canvasContainer" class="canvas-placeholder"></div>
+
+ 
+
+
+    <!-- Os controles continuam funcionando normalmente -->
     <div class="animation-controls" v-if="availableAnimations.length > 0">
       <h3>Animações</h3>
       <div class="animation-buttons">
@@ -42,7 +48,10 @@ import { onMounted, onUnmounted, ref } from 'vue'
 import * as THREE from 'three'
 import { ThreeJSApp } from './core/ThreeJSApp'
 
-const appContainer = ref<HTMLElement>()
+// 2. Crie uma ref para o novo marcador de posição
+const canvasContainer = ref<HTMLElement>()
+
+// As outras refs continuam as mesmas
 const availableAnimations = ref<string[]>([])
 const currentAnimation = ref<string | null>(null)
 const crossfadeDuration = ref(0.5)
@@ -56,12 +65,10 @@ const playAnimation = (animationName: string) => {
   const current = controller.getCurrentAnimation()
   
   if (current && current !== animationName) {
-    // Fazer crossfade se já houver uma animação rodando
     controller.crossFade(current, animationName, crossfadeDuration.value, {
       loop: THREE.LoopRepeat
     })
   } else {
-    // Reproduzir diretamente se não houver animação atual
     controller.play(animationName, {
       loop: THREE.LoopRepeat
     })
@@ -71,25 +78,16 @@ const playAnimation = (animationName: string) => {
 }
 
 const pauseAnimation = () => {
-  const controller = threeApp?.getAnimationController()
-  if (controller) {
-    controller.pause()
-  }
+  threeApp?.getAnimationController()?.pause()
 }
 
 const resumeAnimation = () => {
-  const controller = threeApp?.getAnimationController()
-  if (controller) {
-    controller.resume()
-  }
+  threeApp?.getAnimationController()?.resume()
 }
 
 const stopAllAnimations = () => {
-  const controller = threeApp?.getAnimationController()
-  if (controller) {
-    controller.stopAll()
-    currentAnimation.value = null
-  }
+  threeApp?.getAnimationController()?.stopAll()
+  currentAnimation.value = null
 }
 
 const updateAnimationList = () => {
@@ -101,11 +99,11 @@ const updateAnimationList = () => {
 }
 
 onMounted(async () => {
-  if (appContainer.value) {
-    threeApp = new ThreeJSApp(appContainer.value)
+  // 3. Verifique se o NOVO container existe e passe-o para a ThreeJSApp
+  if (canvasContainer.value) {
+    threeApp = new ThreeJSApp(canvasContainer.value) // Usando a nova ref!
     threeApp.start()
     
-    // Aguardar um pouco para o modelo carregar
     setTimeout(() => {
       updateAnimationList()
     }, 1000)
@@ -128,19 +126,24 @@ onUnmounted(() => {
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: red;
-  overflow: hidden;
+  background: #f0f0f0; /* Fundo mais claro */
+  color: #333;
 }
 
 #app {
-  width: 100vw;
-  height: 100vh;
-  position: relative;
-  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
 }
 
+
+
+/* O canvas será filho de .canvas-placeholder, então ele vai preencher este div */
+
+
 .animation-controls {
-  position: absolute;
+  position: fixed; /* Mudei para fixed para não rolar com a página */
   top: 20px;
   right: 20px;
   z-index: 100;
