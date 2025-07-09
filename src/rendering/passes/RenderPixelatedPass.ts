@@ -83,7 +83,7 @@ export class RenderPixelatedPass extends Pass {
         tDepth: { value: null },
         tNormal: { value: null },
         angleThresholdInRadians: { value: THREE.MathUtils.degToRad(34) },
-        outlineThickness: { value: 1.0 },
+        outlineThickness: { value: 2.0 },
         outlineColor: { value: new THREE.Color(0x0d1123) },
         resolution: {
           value: new THREE.Vector4(
@@ -190,12 +190,12 @@ export class RenderPixelatedPass extends Pass {
           diff += clamp(getDepth(0, -1) - depth, 0.0, 1.0);
           
           // Diagonais para outline mais espessa
-          diff += clamp(getDepth(1, 1) - depth, 0.0, 1.0) * 0.7;
-          diff += clamp(getDepth(-1, 1) - depth, 0.0, 1.0) * 0.7;
-          diff += clamp(getDepth(1, -1) - depth, 0.0, 1.0) * 0.7;
-          diff += clamp(getDepth(-1, -1) - depth, 0.0, 1.0) * 0.7;
+          //diff += clamp(getDepth(1, 1) - depth, 0.0, 1.0) * 0.7;
+          //diff += clamp(getDepth(-1, 1) - depth, 0.0, 1.0) * 0.7;
+          //diff += clamp(getDepth(1, -1) - depth, 0.0, 1.0) * 0.7;
+          //diff += clamp(getDepth(-1, -1) - depth, 0.0, 1.0) * 0.7;
           
-          return floor(smoothstep(0.01, 0.02, diff) * 2.) / 2.;
+          return floor(smoothstep(0.01, 0.02, diff) * 1.) / 2.;
         }
 
         float lum(vec4 color) {

@@ -1,11 +1,11 @@
-import { createLighting } from './lighting'
-import { createGeometry } from './geometry'
-import { SceneManager } from '../core/SceneManager'
+import { createLighting } from './lighting';
+import { loadGLBModel } from './loadGLBModel';
+import { Scene } from 'three';
 
-export function createScene(sceneManager: SceneManager): void {
+export function createScene(scene: Scene): void {
   // Add lighting
-  createLighting(sceneManager.scene)
-  
+  createLighting(scene);
+
   // Add geometry with animations
-  createGeometry(sceneManager)
+  loadGLBModel(scene, '/src/assets/sculping20.glb');
 }

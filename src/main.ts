@@ -1,69 +1,31 @@
-import { SceneManager } from './core/SceneManager'
-import { PixelRenderer } from './rendering/PixelRenderer'
-import { CameraController } from './core/CameraController'
-import { createScene } from './scene/createScene'
+import * as THREE from 'three';
+import { PixelRenderer } from './rendering/PixelRenderer';
+import { CameraController } from './core/CameraController';
+import { createScene } from './scene/createScene';
 
-class App {
-  private sceneManager!: SceneManager
-  private pixelRenderer!: PixelRenderer
-  private cameraController!: CameraController
-  private animationId: number = 0
+const container = document.getElementById('app')!;
 
-  constructor() {
-    this.init()
-  }
+const scene = new THREE.Scene();
+const pixelRenderer = new PixelRenderer(container);
+const cameraController = new CameraController(pixelRenderer.camera, pixelRenderer.renderer.domElement);
 
-  private init(): void {
-    const container = document.getElementById('app')!
-    
-    // Initialize core systems
-    this.sceneManager = new SceneManager()
-    this.pixelRenderer = new PixelRenderer(container)
-    this.cameraController = new CameraController(
-      this.pixelRenderer.camera,
-      this.pixelRenderer.renderer.domElement
-    )
+createScene(scene);
 
-    // Create the scene
-    createScene(this.sceneManager)
+// Setup resize handling
+const handleResize = () => {
+  pixelRenderer.handleResize();
+  cameraController.handleResize();
+};
 
-    // Setup resize handling
-    this.handleResize()
-    window.addEventListener('resize', () => this.handleResize())
+window.addEventListener('resize', handleResize);
+handleResize(); // Call once to set initial size correctly
 
-    // Start animation loop
-    this.animate()
-  }
+const animate = () => {
+  requestAnimationFrame(animate);
 
-  private handleResize(): void {
-    this.pixelRenderer.handleResize()
-    this.cameraController.handleResize()
-  }
+  cameraController.update();
 
-  private animate = (): void => {
-    this.animationId = requestAnimationFrame(this.animate)
-    
-    const time = performance.now() / 1000
-    
-    // Update scene animations
-    this.sceneManager.update(time)
-    
-    // Update camera controls
-    this.cameraController.update()
-    
-    // Render the scene
-    this.pixelRenderer.render(this.sceneManager.scene)
-  }
+  pixelRenderer.render(scene);
+};
 
-  public dispose(): void {
-    if (this.animationId) {
-      cancelAnimationFrame(this.animationId)
-    }
-    this.pixelRenderer.dispose()
-    this.cameraController.dispose()
-    window.removeEventListener('resize', () => this.handleResize())
-  }
-}
-
-// Initialize the application
-new App()
+animate();

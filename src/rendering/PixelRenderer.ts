@@ -23,7 +23,7 @@ export class PixelRenderer {
     // `divideScalar(6)` significa que a resolução de renderização será 1/6 da resolução da tela.
     // Um fator menor (ex: 3) resultará em pixels maiores (menor densidade).
     // Um fator maior (ex: 12) resultará em pixels menores (maior densidade).
-    this.renderResolution = this.screenResolution.clone().divideScalar(5)
+    this.renderResolution = this.screenResolution.clone().divideScalar(4)
     this.renderResolution.x = Math.floor(this.renderResolution.x)
     this.renderResolution.y = Math.floor(this.renderResolution.y)
 
