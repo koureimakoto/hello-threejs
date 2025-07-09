@@ -1,5 +1,5 @@
 {
-  "name": "modern-threejs-pixelart",
+  "name": "vue-threejs-pixelart",
   "version": "1.0.0",
   "type": "module",
   "scripts": {
@@ -8,9 +8,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "vue": "^3.4.0",
     "three": "^0.177.0"
   },
   "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.0",
     "@types/estree": "^1.0.8",
     "@types/three": "^0.177.0",
     "typescript": "^5.0.2",
