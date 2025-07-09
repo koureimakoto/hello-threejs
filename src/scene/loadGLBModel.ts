@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
 import { Scene } from 'three';
 import { AnimationController } from '../animation/AnimationController';
 
@@ -11,6 +12,11 @@ export interface GLBModelInstance {
 export function loadGLBModel(scene: Scene, modelPath: string): Promise<GLBModelInstance> {
   return new Promise((resolve, reject) => {
     const loader = new GLTFLoader();
+    
+    // Configure DRACO loader for compressed models
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/');
+    loader.setDRACOLoader(dracoLoader);
 
     loader.load(
       modelPath,
