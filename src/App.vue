@@ -39,6 +39,7 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
+import * as THREE from 'three'
 import { ThreeJSApp } from './core/ThreeJSApp'
 
 const appContainer = ref<HTMLElement>()
