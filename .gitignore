@@ -12,7 +12,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 # Ignore src folder to prevent committing changes
-src/
+# src/
 
 .DS_Store
 .vscode/
